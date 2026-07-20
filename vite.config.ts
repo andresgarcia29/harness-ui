@@ -3,11 +3,13 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
-// El build se vendorea en ../dist y lo sirve server.py (stdlib): el usuario
-// final jamás necesita Node — Node es herramienta de build, no de runtime.
+// harness-ui es repo propio (ADR-0003). El build queda en ./dist; los
+// consumidores (harness-daemon lo embebe; harness-installer lo copia a sus
+// templates) lo toman de aquí. Node es herramienta de build, no de runtime:
+// el usuario final nunca lo necesita.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
-  build: { outDir: "../dist", emptyOutDir: true },
+  build: { outDir: "dist", emptyOutDir: true },
   base: "./",
 })
