@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -27,17 +27,28 @@ export function NewTask({ s, go }: { s: Snapshot; go: Go }) {
   const [asum, setAsum] = useState(true)
   const [review, setReview] = useState(false)
   const [busy, setBusy] = useState(false)
-  const ready = title.trim().length > 2 && (origin !== "ticket" || ticket.trim().length > 0)
+  // Selector de agente (config del daemon) + modo. claude usa /auto (headless);
+  // opencode/kimi corren en un tab de herdr con el prompt crudo (ADR-0003).
+  const [agents, setAgents] = useState<{ name: string; auto: boolean; headless: boolean }[]>([])
+  const [agent, setAgent] = useState("claude")
+  const [mode, setMode] = useState("headless")
+  useEffect(() => { fetch("/api/task-agents").then((r) => (r.ok ? r.json() : [])).then(setAgents).catch(() => {}) }, [])
+  const agentInfo = agents.find((a) => a.name === agent)
+  const rawPrompt = agentInfo ? !agentInfo.auto : false // no usa /auto → el contexto ES el prompt
+  useEffect(() => { if (agentInfo && !agentInfo.headless) setMode("herdr") }, [agentInfo])
+  const ready = title.trim().length > 2 && (origin !== "ticket" || ticket.trim().length > 0) && (!rawPrompt || ctx.trim().length > 0)
 
   const crear = async () => {
     setBusy(true)
     const r = await op("/api/op/task", {
       title, context: ctx, origin, ticket, model: model === "auto" ? "" : model, priority: prio,
       max_parallel: +par || 3, budget, assumptions_ok: asum, review_before_ship: review,
+      agent, mode,
     })
     setBusy(false)
     if (r.ok) {
-      toast.success(`Lanzada como ${r.id} · sesión ${r.session.slice(0, 8)}… — aparecerá sola en Sesiones.`)
+      const how = r.mode === "herdr" ? `terminal ${r.agent} (pane ${String(r.pane).slice(0, 6)}…)` : `sesión ${String(r.session || "").slice(0, 8)}…`
+      toast.success(`Lanzada como ${r.id} · ${how}`)
       setTimeout(() => go({ name: "task", id: r.id }), 1200)
     } else toast.error("No se lanzó: " + r.error)
   }
@@ -83,6 +94,12 @@ export function NewTask({ s, go }: { s: Snapshot; go: Go }) {
           <section className="new-task-card">
             <div className="new-task-card-head"><span>02</span><div><h2>Configura la ejecución</h2><p>Controla capacidad, urgencia y límites de la misión.</p></div></div>
             <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
+              <Field label="Agente" hint={rawPrompt ? "prompt crudo" : "usa /auto"}>
+                <Select value={agent} onValueChange={(v) => v != null && setAgent(v)}><SelectTrigger className="w-full"><SelectValue>{agent}</SelectValue></SelectTrigger><SelectContent>{(agents.length ? agents : [{ name: "claude", auto: true, headless: true }]).map((a) => <SelectItem key={a.name} value={a.name}>{a.name}{a.auto ? " · /auto" : " · prompt"}</SelectItem>)}</SelectContent></Select>
+              </Field>
+              <Field label="Modo" hint={agentInfo && !agentInfo.headless ? "solo terminal" : undefined}>
+                <Select value={mode} onValueChange={(v) => v != null && setMode(v)}><SelectTrigger className="w-full"><SelectValue>{mode === "herdr" ? "Terminal (herdr)" : "Segundo plano"}</SelectValue></SelectTrigger><SelectContent><SelectItem value="headless" disabled={!!agentInfo && !agentInfo.headless}>Segundo plano · headless</SelectItem><SelectItem value="herdr">Terminal (herdr) · visible</SelectItem></SelectContent></Select>
+              </Field>
               <Field label="Modelo preferido"><Select value={model || "auto"} onValueChange={(v) => setModel(v ?? "")}><SelectTrigger className="w-full"><SelectValue>{model && model !== "auto" ? model : "Selección automática"}</SelectValue></SelectTrigger><SelectContent><SelectItem value="auto">Selección automática · recomendado</SelectItem>{models.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></Field>
               <Field label="Prioridad"><Select value={prio} onValueChange={(v) => v != null && setPrio(v)}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{["P0", "P1", "P2", "P3"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></Field>
               <Field label="Agentes en paralelo" hint="1–12"><Input type="number" min={1} max={12} value={par} onChange={(e) => setPar(e.target.value)} /></Field>
@@ -102,6 +119,7 @@ export function NewTask({ s, go }: { s: Snapshot; go: Go }) {
         <aside className="launch-summary xl:sticky xl:top-20">
           <div className="flex items-center gap-3 border-b border-border/65 p-5"><span className="grid size-10 place-items-center rounded-xl bg-(--brand) text-white shadow-[0_12px_28px_-12px_var(--brand-glow)]"><Rocket className="size-4" /></span><div><span className="block text-[7.5px] font-bold uppercase tracking-[0.15em] text-(--brand)">Launch control</span><h2 className="font-heading text-[15px] font-bold tracking-tight">Resumen de misión</h2></div></div>
           <div className="space-y-1 p-4">
+            <div className="launch-summary-row"><Bot /><span>Agente</span><b>{agent}{mode === "herdr" ? " · terminal" : ""}</b></div>
             <div className="launch-summary-row"><Cpu /><span>Modelo</span><b>{model && model !== "auto" ? model : "Automático"}</b></div>
             <div className="launch-summary-row"><ListChecks /><span>Prioridad</span><b>{prio}</b></div>
             <div className="launch-summary-row"><Users /><span>Paralelismo</span><b>{+par || 3} agentes</b></div>
