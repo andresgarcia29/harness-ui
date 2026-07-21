@@ -1,0 +1,26 @@
+# Cadena de sincronización del panel (ADR-0003): harness-ui es la fuente de
+# verdad. Cuando su source cambia, avisa al installer para que reconstruya su
+# dist. El installer, al mergear, avisa al daemon (ver sus workflows).
+# Requiere secret CONSUMERS_PAT: PAT con scope repo sobre andresgarcia29/harness-creator.
+name: notify-consumers
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+  workflow_dispatch:
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: dispatch → harness-creator (rebuild dist)
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CONSUMERS_PAT }}
+          repository: andresgarcia29/harness-creator
+          event-type: harness-ui-updated
