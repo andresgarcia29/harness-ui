@@ -62,6 +62,9 @@ function AgentBlock({ a }: { a: AgentDetail }) {
         <div className="min-w-0 flex-1">
           <b className="text-[13px] font-semibold">{a.who}</b>
           <span className="ml-2 font-mono text-[10.5px] text-muted-foreground/60">{a.id === "main" ? a.model : a.type}</span>
+          {a.id !== "main" && a.model && (
+            <span className="ml-1.5 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground" title="modelo del agente">{a.model}</span>
+          )}
         </div>
         {gap > GAP && <span className="hidden items-center gap-1 text-[10.5px] text-(--wait)/80 sm:flex"><Clock className="size-3" />pausa {dur(gap)}</span>}
         {think > 0 && <span className="hidden items-center gap-1 text-[10.5px] text-(--brand) md:flex"><Brain className="size-3" />{think}</span>}
