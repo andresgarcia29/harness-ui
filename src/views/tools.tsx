@@ -36,6 +36,15 @@ function McpCard({ m }: { m: McpServer }) {
             ? <CircleDashed className="size-4 shrink-0 text-muted-foreground/50" />
             : p.ok ? <CircleCheck className="size-4 shrink-0 text-(--ok)" /> : <CircleX className="size-4 shrink-0 text-(--bad)" />}
           <b className="font-mono text-[13px] font-semibold">{m.name}</b>
+          {(m.secrets_missing?.length ?? 0) > 0 && (
+            <span className="rounded bg-(--bad)/10 px-1.5 py-0.5 font-mono text-[10px] text-(--bad)" title={"claves faltantes en .secrets: " + m.secrets_missing!.join(", ")}>
+              faltan {m.secrets_missing!.length} clave{m.secrets_missing!.length > 1 ? "s" : ""}
+            </span>
+          )}
+          {m.secrets_needed && m.secrets_needed.length > 0 && (m.secrets_missing?.length ?? 0) === 0 && (
+            <span className="rounded bg-(--ok)/10 px-1.5 py-0.5 font-mono text-[10px] text-(--ok)" title={m.secrets_needed.join(", ")}>claves ✓</span>
+          )}
+          {p?.at && <span className="font-mono text-[10px] text-muted-foreground/60" title="última sonda">{p.at}</span>}
           <StatusBadge on={p?.ok}>{estado}</StatusBadge>
           <Badge variant="outline" className="rounded-full text-[9px] uppercase tracking-wider text-muted-foreground/70">
             <Package className="size-2.5" /> {transportOf(m)}
@@ -128,6 +137,15 @@ export function Tools({ s }: { s: Snapshot }) {
               <div className="flex items-center gap-2">
                 {sk.ok ? <CircleCheck className="size-3.5 text-(--ok)" /> : <CircleX className="size-3.5 text-(--bad)" />}
                 <b className="font-mono text-xs font-semibold">{sk.name}</b>
+                {sk.layer && (
+                  <span
+                    className={cn("rounded px-1.5 py-0.5 font-mono text-[10px]",
+                      sk.layer === "upstream" && "bg-secondary text-muted-foreground",
+                      sk.layer === "compartida" && "bg-(--brand)/10 text-(--brand)",
+                      sk.layer === "local" && "bg-(--ok)/10 text-(--ok)")}
+                    title={sk.layer === "compartida" ? (sk.source ?? "") : sk.layer === "upstream" ? "la trae el plugin (harness update la renueva)" : "tuya: nadie la pisa"}
+                  >{sk.layer === "upstream" ? "plugin" : sk.layer}</span>
+                )}
               </div>
               <p className="mt-0.5 text-[11.5px] leading-relaxed text-muted-foreground">{sk.desc}</p>
             </CardContent></Card>

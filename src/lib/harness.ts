@@ -155,12 +155,13 @@ export type Toolbox = {
   agents: { name: string; desc: string }[]
   make: { target: string; desc: string }[]
   gates: string[]; hooks: string[]
-  skills: { name: string; desc: string; ok: boolean }[]
+  skills: { name: string; desc: string; ok: boolean; layer?: string | null; source?: string | null }[]
 }
 export type McpProbe = { ok: boolean; ms: number; server?: string; version?: string; error?: string; auth_hint?: boolean; at?: string; tools?: string[] }
 export type McpServer = {
   name: string; command: string; args: string[]; wrapped: boolean
   bin_ok: boolean; secrets_ok: boolean | null; env: string[]; probe?: McpProbe | null
+  secrets_needed?: string[] | null; secrets_missing?: string[] | null
 }
 // drill-down de razonamiento (on-demand, /api/session)
 export type ThreadItem = { k: "text" | "think" | "tool"; ts: number; t: string; inp?: string }
