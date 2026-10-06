@@ -1,5 +1,6 @@
 # harness-ui
 
+[![ci](https://github.com/andresgarcia29/harness-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/andresgarcia29/harness-ui/actions/workflows/ci.yml)
 [![license](https://img.shields.io/github/license/andresgarcia29/harness-ui)](LICENSE)
 ![React](https://img.shields.io/badge/React-20232a?logo=react&logoColor=61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white)
