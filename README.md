@@ -12,6 +12,8 @@
 [`harness-daemon`](https://github.com/andresgarcia29/harness-daemon) instances, local or on remote machines
 over SSH-forwarded ports, and shows every agent session, task, phase, gate and dollar in one place.
 
+![Overview: agents working, tasks waiting on you, a red gate, live terminals and daily spend](docs/overview.png)
+
 ## Highlights
 
 - **Fleet view.** One UI, N daemons. Switch machines and the whole page follows the selected host.
@@ -20,6 +22,8 @@ over SSH-forwarded ports, and shows every agent session, task, phase, gate and d
   format has a single source of truth. Resync with `scripts/sync-contract.sh`; details in `src/lib/contract.README.md`.
 - **No app-level auth by design.** SSH keys are the auth; daemons only listen on `127.0.0.1`.
 - **Zero runtime dependencies for users.** Node is a build tool only: the daemon embeds the compiled `dist/` and serves it.
+
+![Live terminals: an agent waiting on a decision, with one-click answers, next to one fixing failing tests](docs/terminals.png)
 
 ## How it fits
 
